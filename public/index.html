@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel To PDF Converter</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>📊 Excel To PDF Converter</h1>
+        <p class="subtitle">Convert Excel files into PDF instantly</p>
+
+        <!-- UPLOAD AREA -->
+        <div class="upload-box" id="dropZone">
+            <p>📁 Drag & Drop Excel File Here</p>
+            <p>OR</p>
+
+            <label for="excel" class="select-btn">📂 Select File</label>
+            <input type="file" id="excel" accept=".xlsx,.xls">
+        </div>
+
+        <!-- FILE NAME -->
+        <p id="fileName">No file selected</p>
+
+        <!-- PROGRESS BAR -->
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <!-- BUTTON -->
+        <button onclick="uploadFile()">🚀 Convert To PDF</button>
+
+        <!-- LOADER -->
+        <div class="loader" id="loader"></div>
+        <div id="loadingBox" style="display:none;">
+    <div class="spinner"></div>
+
+    <div class="loading-text" id="loadingText">
+        Reading Excel File...
+    </div>
+
+    <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+</div>
+
+        <!-- MESSAGE -->
+        <p id="msg"></p>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
