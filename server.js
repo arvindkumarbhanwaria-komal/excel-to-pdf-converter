@@ -13,10 +13,6 @@ if (!fs.existsSync("uploads")) {
     fs.mkdirSync("uploads");
 }
 
-if (!fs.existsSync("pdfs")) {
-    fs.mkdirSync("pdfs");
-}
-
 const upload = multer({
     dest: "uploads/",
     limits: {
@@ -24,53 +20,80 @@ const upload = multer({
     }
 });
 
-app.post("/convert", upload.single("excel"), (req, res) => {
+app.post("/convert", upload.single("excel"), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).send("No file uploaded");
         }
 
-        const workbook = XLSX.readFile(req.file.path);
+        const workbook = XLSX.readFile(req.file.path, {
+            dense: true
+        });
 
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
         const data = XLSX.utils.sheet_to_json(sheet, {
-            header: 1
+            header: 1,
+            raw: false
         });
 
-        const pdfName = Date.now() + ".pdf";
-        const pdfPath = path.join("pdfs", pdfName);
+        fs.unlink(req.file.path, () => {});
 
-        const doc = new PDFDocument();
-        const stream = fs.createWriteStream(pdfPath);
-
-        doc.pipe(stream);
-
-        data.forEach((row) => {
-            doc.text(row.join(" | "));
-            doc.moveDown();
+        const doc = new PDFDocument({
+            margin: 20,
+            size: "A4",
+            compress: true
         });
+
+        const pdfName =
+            path.parse(req.file.originalname).name + ".pdf";
+
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${pdfName}"`
+        );
+
+        res.setHeader(
+            "Content-Type",
+            "application/pdf"
+        );
+
+        doc.pipe(res);
+
+        doc.fontSize(8);
+
+        const MAX_ROWS = 15000;
+
+        for (
+            let i = 0;
+            i < Math.min(data.length, MAX_ROWS);
+            i++
+        ) {
+            const row = data[i];
+
+            doc.text(
+                row
+                    .map(cell =>
+                        cell === undefined ? "" : String(cell)
+                    )
+                    .join(" | "),
+                {
+                    width: 550
+                }
+            );
+        }
 
         doc.end();
-
-        stream.on("finish", () => {
-            fs.unlinkSync(req.file.path);
-
-            res.download(pdfPath, () => {
-                if (fs.existsSync(pdfPath)) {
-                    fs.unlinkSync(pdfPath);
-                }
-            });
-        });
-
     } catch (err) {
         console.error(err);
-        res.status(500).send("Error converting file");
+        res.status(500).send("Conversion Failed");
     }
 });
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(
+        path.join(__dirname, "public", "index.html")
+    );
 });
 
 const PORT = process.env.PORT || 3001;
